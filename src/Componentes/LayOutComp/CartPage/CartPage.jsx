@@ -1,4 +1,3 @@
-console.log('Current file:', __filename);
 import React, { useContext, useEffect, useState } from 'react';
 import { FetchCartContext } from './../../../Context/Cart';
 import { mediaContext } from './../../../Context/MediaStore';
@@ -16,13 +15,7 @@ const CartPage = () => {
     const { cart, UpdateProductCart, deleteProductCart, clearCart } = useContext(FetchCartContext);
     const { userData } = useContext(mediaContext);
 
-    // Add loading state
-    if (!cart) {
-        return <div>Loading cart...</div>;
-    }
-
-    const cartItems = cart?.items || [];
-
+    // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
     const [totals, setTotals] = useState({
         subtotal: 0,
         shippingFees: 40,
@@ -31,9 +24,11 @@ const CartPage = () => {
 
     const [paymentMethod, setPaymentMethod] = useState('cash');
 
+    const cartItems = cart?.items || [];
+
     useEffect(() => {
         const subtotal = cartItems.reduce((acc, item) => {
-            const price = item.productId.offer? parseFloat(item.productId.price)*0.8 : parseFloat(item.productId.price);
+            const price = item.productId?.offer ? parseFloat(item.productId.price) * 0.8 : parseFloat(item.productId?.price || 0);
             const count = item.quantity;
 
             if (!isNaN(price) && !isNaN(count)) {
@@ -47,6 +42,12 @@ const CartPage = () => {
         setTotals({ subtotal, shippingFees: totals.shippingFees, totalPrice });
     }, [cartItems, totals.shippingFees]);
 
+    // NOW YOU CAN HAVE YOUR CONDITIONAL RETURNS
+    if (!cart) {
+        return <div>Loading cart...</div>;
+    }
+
+    // Rest of your component code remains the same...
     const handlePayment = () => {
         if (paymentMethod === 'cash') {
             handleCashPayment();
@@ -59,7 +60,7 @@ const CartPage = () => {
         try {
             const response = await axios.post(`${BaseUrl}/carts/payment/cash`, {
                 userId: userData.userId,
-                items: cartItems.map(item => ({  // Use cartItems instead of cart.items
+                items: cartItems.map(item => ({
                     productId: item.productId._id,
                     quantity: item.quantity,
                 })),
@@ -87,7 +88,7 @@ const CartPage = () => {
         try {
             const payload = {
                 userId: userData.userId,
-                items: cartItems.map(item => ({  // Use cartItems instead of cart.items
+                items: cartItems.map(item => ({
                     productId: item.productId._id,
                     quantity: item.quantity,
                 })),
@@ -119,7 +120,7 @@ const CartPage = () => {
     };
     
     const handleQuantityChange = (productId, newCount, stockQuantity) => {
-        const item = cartItems.find(item => item.productId._id === productId);  // Use cartItems
+        const item = cartItems.find(item => item.productId._id === productId);
         if (!item) return;
 
         if (newCount > stockQuantity) {
