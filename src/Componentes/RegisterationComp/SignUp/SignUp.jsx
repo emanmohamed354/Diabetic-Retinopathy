@@ -1,54 +1,73 @@
-
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import { BaseUrl } from '../../BaseUrl/base';
 import ErrorList from '../ErrorList/ErrorList';
-import styles from './signUp.module.scss';
+import FormWrapper from '../FormWrapper/FormWrapper';
 
 export default function SignUp() {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const togglePasswordVisibility = () => {
-    setPasswordVisible(!passwordVisible);
-  };
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isManualSubmit, setIsManualSubmit] = useState(false);
+  const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false)
-  let navigate = useNavigate()
+  const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+  const toggleConfirmPasswordVisibility = () => setConfirmPasswordVisible(!confirmPasswordVisible);
 
   const notify = (msg, type) => {
-    toast[type](msg, {
-      autoClose: 1000,
-    });
-  }
+    toast[type](msg, { autoClose: 1000 });
+  };
 
-  let validationSchema = Yup.object({
-    userName: Yup.string().required().min(3).max(15),
-    lastName: Yup.string().required().min(3).max(15),
-    phone: Yup.string()
-      .matches(/^\d{11}$/, 'Phone number must be exactly 11 digits')
-      .required('Phone number is required'),
-    email: Yup.string().required().email(),
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const handleFormSubmit = (e) => {
+        console.log('Form submit triggered by:', e.target, e.type, 'Manual:', isManualSubmit);
+      };
+      
+      document.addEventListener('submit', handleFormSubmit, true);
+      
+      return () => {
+        document.removeEventListener('submit', handleFormSubmit, true);
+      };
+    }
+  }, [isManualSubmit]);
+
+  useEffect(() => {
+    setIsManualSubmit(false);
+  }, [currentStep]);
+
+  const validationSchema = Yup.object({
+    userName: Yup.string().required('First name is required').min(3).max(15),
+    lastName: Yup.string().required('Last name is required').min(3).max(15),
+    phone: Yup.string().matches(/^\d{11}$/, 'Must be 11 digits').required('Phone is required'),
+    email: Yup.string().required('Email is required').email('Invalid email'),
     password: Yup.string()
-      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, `Password must start with an uppercase
-     letter and be at least 6 characters long,
-      including lowercase letters, digits, or @, $, %, &, #.`)
+      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, 'Invalid format')
       .required('Password is required'),
-    confirmPassword: Yup.string().required()
-      .oneOf([Yup.ref('password')], "password and confirmPassword must be matched"),
-    age: Yup.number(),
-    gender: Yup.string(),
-    street: Yup.string().required(),
-    city: Yup.string().required(),
-    state: Yup.string().required(),
-    country: Yup.string().required()
-  })
+    confirmPassword: Yup.string().required('Confirm password is required')
+      .oneOf([Yup.ref('password')], 'Passwords must match'),
+    age: Yup.number()
+      .required('Age is required')
+      .min(1, 'Age must be at least 1')
+      .max(120, 'Age must be less than 120')
+      .integer('Age must be a whole number'),
+    gender: Yup.string()
+      .required('Gender is required')
+      .oneOf(['male', 'female', 'other'], 'Please select a valid gender'),
+    street: Yup.string().required('Street is required'),
+    city: Yup.string().required('City is required'),
+    state: Yup.string().required('State is required'),
+    country: Yup.string().required('Country is required')
+  });
 
-  let Formik = useFormik({
+  const Formik = useFormik({
     initialValues: {
       userName: '',
       lastName: '',
@@ -58,17 +77,23 @@ export default function SignUp() {
       confirmPassword: '',
       age: '',
       gender: '',
-      address: {
-        street: '',
-        city: '',
-        state: '',
-        country: ''
-      }
+      street: '',
+      city: '',
+      state: '',
+      country: ''
     },
-    validationSchema
-    ,
-
+    validationSchema,
     onSubmit: (values) => {
+      if (!isManualSubmit) {
+        console.warn('Prevented auto-submit');
+        return;
+      }
+
+      if (!Formik.isValid) {
+        notify('Please fill all fields correctly', 'error');
+        return;
+      }
+
       setLoading(true);
       const payload = {
         userName: values.userName,
@@ -76,7 +101,7 @@ export default function SignUp() {
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        age: values.age,
+        age: parseInt(values.age),
         gender: values.gender,
         phone: values.phone,
         address: {
@@ -91,191 +116,402 @@ export default function SignUp() {
         .then((response) => {
           if (response.status === 201) {
             notify('Registration successful! 💊', 'success');
-            navigate('/Login');
+            setIsManualSubmit(false);
+            navigate('/auth/login');
           }
-          console.log(response);
-        }).catch((error) => {
-          if (error.response || error.response.status === 400) {
-            setLoading(false);
-            const errorMessage = error.response.data.msg || "An error occurred";
-            notify(errorMessage, 'error');
-          }
+        })
+        .catch((error) => {
+          setLoading(false);
+          setIsManualSubmit(false);
+          const errorMessage = error.response?.data?.msg || "An error occurred";
+          notify(errorMessage, 'error');
+        })
+        .finally(() => {
+          setLoading(false);
+          setIsManualSubmit(false);
         });
     }
+  });
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      if (currentStep === 3 && e.target.type === 'submit') {
+        setIsManualSubmit(true);
+        Formik.handleSubmit();
+      }
+      else if (currentStep < 3) {
 
-  })
+        console.log('Enter pressed on step', currentStep);
+      }
+    }
+  };
 
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const nextStep = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  const handleManualSubmit = (e) => {
+    e.preventDefault();
+    setIsManualSubmit(true);
+    Formik.handleSubmit();
+  };
+
+  const renderStep = () => {
+    switch(currentStep) {
+      case 1:
+        return (
+          <>
+            <div className="formBody">
+              <div className="row g-2">
+                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>First Name</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-user"></i>
+                      <input
+                        type="text"
+                        name="userName"
+                        placeholder="First Name"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.userName}
+                        className={`form-control ${Formik.errors.userName && Formik.touched.userName ? 'error' : ''}`}
+                        autoComplete="given-name"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>Last Name</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-user"></i>
+                      <input
+                        type="text"
+                        name="lastName"
+                        placeholder="Last Name"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.lastName}
+                        className={`form-control ${Formik.errors.lastName && Formik.touched.lastName ? 'error' : ''}`}
+                        autoComplete="family-name"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="inputGroup">
+                <label>Email</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-envelope"></i>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.email}
+                    className={`form-control ${Formik.errors.email && Formik.touched.email ? 'error' : ''}`}
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              <div className="inputGroup">
+                <label>Phone</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-phone"></i>
+                  <input
+                    type="text"
+                    name="phone"
+                    placeholder="Phone (11 digits)"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.phone}
+                    className={`form-control ${Formik.errors.phone && Formik.touched.phone ? 'error' : ''}`}
+                    autoComplete="tel"
+                  />
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>Age</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-birthday-cake"></i>
+                      <input
+                        type="number"
+                        name="age"
+                        placeholder="Age"
+                        min="1"
+                        max="120"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.age}
+                        className={`form-control ${Formik.errors.age && Formik.touched.age ? 'error' : ''}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>Gender</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-venus-mars"></i>
+                      <select
+                        name="gender"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.gender}
+                        className={`form-control ${Formik.errors.gender && Formik.touched.gender ? 'error' : ''}`}
+                      >
+                        <option value="">Select</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="formFooter">
+              <div className="stepButtons">
+                <button type="button" className="nextBtn" onClick={nextStep}>
+                  <span>Next</span>
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </>
+        );
+        
+      case 2:
+        return (
+          <>
+            <div className="formBody">
+              <div className="inputGroup">
+                <label>Password</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-lock"></i>
+                  <input
+                    type={passwordVisible ? 'text' : 'password'}
+                    name="password"
+                    placeholder="Password"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.password}
+                    className={`form-control ${Formik.errors.password && Formik.touched.password ? 'error' : ''}`}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="eyeButton" onClick={togglePasswordVisibility} tabIndex="-1">
+                    <FontAwesomeIcon icon={passwordVisible ? faEye : faEyeSlash} />
+                  </button>
+                </div>
+                <ErrorList Formik={Formik} type="password" />
+              </div>
+
+              <div className="inputGroup">
+                <label>Confirm Password</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-lock"></i>
+                  <input
+                    type={confirmPasswordVisible ? 'text' : 'password'}
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.confirmPassword}
+                    className={`form-control ${Formik.errors.confirmPassword && Formik.touched.confirmPassword ? 'error' : ''}`}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="eyeButton" onClick={toggleConfirmPasswordVisibility} tabIndex="-1">
+                    <FontAwesomeIcon icon={confirmPasswordVisible ? faEye : faEyeSlash} />
+                  </button>
+                </div>
+                <ErrorList Formik={Formik} type="confirmPassword" />
+              </div>
+            </div>
+
+            <div className="formFooter">
+              <div className="stepButtons">
+                <button type="button" className="prevBtn" onClick={prevStep}>
+                  <i className="fas fa-arrow-left"></i>
+                  <span>Back</span>
+                </button>
+                <button type="button" className="nextBtn" onClick={nextStep}>
+                  <span>Next</span>
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </>
+        );
+        
+      case 3:
+        return (
+          <>
+            <div className="formBody">
+              <div className="inputGroup">
+                <label>Street</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-road"></i>
+                  <input
+                    type="text"
+                    name="street"
+                    placeholder="Street Address"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.street}
+                    className={`form-control ${Formik.errors.street && Formik.touched.street ? 'error' : ''}`}
+                    autoComplete="street-address"
+                  />
+                </div>
+              </div>
+
+              <div className="row g-2">
+                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>City</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-city"></i>
+                      <input
+                        type="text"
+                        name="city"
+                        placeholder="City"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.city}
+                        className={`form-control ${Formik.errors.city && Formik.touched.city ? 'error' : ''}`}
+                        autoComplete="address-level2"
+                      />
+                    </div>
+                  </div>
+                </div>
+                                <div className="col-6">
+                  <div className="inputGroup">
+                    <label>State</label>
+                    <div className="inputWrapper">
+                      <i className="fas fa-map"></i>
+                      <input
+                        type="text"
+                        name="state"
+                        placeholder="State"
+                        onBlur={Formik.handleBlur}
+                        onChange={Formik.handleChange}
+                        onKeyDown={handleInputKeyDown}
+                        value={Formik.values.state}
+                        className={`form-control ${Formik.errors.state && Formik.touched.state ? 'error' : ''}`}
+                        autoComplete="address-level1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inputGroup">
+                <label>Country</label>
+                <div className="inputWrapper">
+                  <i className="fas fa-globe"></i>
+                  <input
+                    type="text"
+                    name="country"
+                    placeholder="Country"
+                    onBlur={Formik.handleBlur}
+                    onChange={Formik.handleChange}
+                    onKeyDown={handleInputKeyDown}
+                    value={Formik.values.country}
+                    className={`form-control ${Formik.errors.country && Formik.touched.country ? 'error' : ''}`}
+                    autoComplete="country"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="formFooter">
+              <div className="stepButtons">
+                <button type="button" className="prevBtn" onClick={prevStep}>
+                  <i className="fas fa-arrow-left"></i>
+                  <span>Back</span>
+                </button>
+                <button
+                  type="button"
+                  className="submitBtn"
+                  onClick={handleManualSubmit}
+                  disabled={!(Formik.isValid && Formik.dirty) || loading}
+                >
+                  {loading ? (
+                    <i className="fas fa-spinner fa-spin"></i>
+                  ) : (
+                    <>
+                      <i className="fas fa-user-plus"></i>
+                      <span>Sign Up</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              <p className="switchText mt-2">
+                Already have an account?
+                <Link to="/auth/login" className="link">Sign In</Link>
+              </p>
+            </div>
+          </>
+        );
+        
+      default:
+        return null;
+    }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!isManualSubmit) {
+      console.log('Form submission prevented - not manual');
+      return false;
+    }
+    
+    Formik.handleSubmit();
+  };
 
   return (
-
-
-    <main>
-
-      <div className={`${styles.bg}`}> </div>
-
-      <div className={`${styles.container}`}>
-
-        <form className={styles.form} onSubmit={Formik.handleSubmit}>
-          <h1 className={styles.text}>Register</h1>
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.userName}
-                placeholder="User Name" name="userName" />
-              <ErrorList Formik={Formik} type={"userName"} />
-            </div>
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.lastName}
-                placeholder="Last Name" name="lastName" />
-              <ErrorList Formik={Formik} type={"lastName"} />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.phone}
-                placeholder="Phone" name="phone" />
-              <ErrorList Formik={Formik} type={"phone"} />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <input
-                type={passwordVisible ? 'text' : 'password'}
-                className="form-control"
-                placeholder="Password"
-                name="password"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.password}
-
-              />
-              <ErrorList Formik={Formik} type={"password"} />
-              <span onClick={togglePasswordVisibility} style={{ cursor: 'pointer', position: 'absolute', right: '10px', top: '10px' }}>
-                <FontAwesomeIcon icon={passwordVisible ? faEye : faEyeSlash} />
-              </span>
-            </div>
-            <div className="col-12 col-md-6">
-              <input
-                type={passwordVisible ? 'text' : 'password'} // Toggle between text and password
-                className="form-control"
-                placeholder="Confirm Password"
-                name="confirmPassword"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.confirmPassword}
-              />
-              <ErrorList Formik={Formik} type={"confirmPassword"} />
-              <span onClick={togglePasswordVisibility} style={{ cursor: 'pointer', position: 'absolute', right: '10px', top: '10px' }}>
-                <FontAwesomeIcon icon={passwordVisible ? faEye : faEyeSlash} />
-              </span>
-            </div>
-          </div>
-
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <input type="email" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.email}
-                placeholder="Email" name="email" />
-              <ErrorList Formik={Formik} type={"email"} />
-            </div>
-            <div className="col-12 col-md-6">
-              <input type="number" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.age}
-                placeholder="Age" name="age" />
-              <ErrorList Formik={Formik} type={"age"} />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12">
-              <select className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.gender}
-
-                name="gender">
-
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <ErrorList Formik={Formik} type={"gender"} />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.street}
-
-                placeholder="Street" name="street" />
-              <ErrorList Formik={Formik} type={"street"} />
-            </div>
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.city}
-                placeholder="City" name="city" />
-              <ErrorList Formik={Formik} type={"city"} />
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.state}
-                placeholder="State" name="state" />
-              <ErrorList Formik={Formik} type={"state"} />
-            </div>
-            <div className="col-12 col-md-6">
-              <input type="text" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.country}
-                placeholder="Country" name="country" />
-              <ErrorList Formik={Formik} type={"country"} />
-            </div>
-          </div>
-          <button disabled={!(Formik.isValid && Formik.dirty && !loading)} type='submit' className={styles['gradient-button']}>
-
-            {!loading ? ("SignUp") :
-              <i className='fa-spinner fa-spin fas mt-2'></i>
-
-            }
-
-          </button>
-          <div className='text-center mt-2'>
-            <span > have an account ? <Link to={'/Login'} className={`linkk ${styles.text}`}>Login</Link></span>
-          </div>
-
-
-
-        </form>
-      </div>
-    </main>
-
-  )
+    <FormWrapper
+      icon="fas fa-user-plus"
+      title="Create Account"
+      subtitle={`Step ${currentStep} of 3`}
+      onSubmit={handleFormSubmit}
+      onKeyPress={handleKeyPress}
+      currentStep={currentStep}
+      totalSteps={3}
+    >
+      {renderStep()}
+    </FormWrapper>
+  );
 }
-

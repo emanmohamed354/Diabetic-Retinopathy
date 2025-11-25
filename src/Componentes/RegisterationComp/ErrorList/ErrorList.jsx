@@ -1,15 +1,15 @@
-import React from 'react'
+import React from 'react';
+import styles from './errorList.module.scss';
 
-export default function ErrorList({Formik,type}) {
-      
+export default function ErrorList({ Formik, type }) {
   return (
-    <>    
-               {Formik.errors[type] && Formik.touched[type] ? 
-                    <div className='alert alert-danger text-danger'>
-                      {Formik.errors[type]}
-                      </div>
-                  :('')
-               } 
+    <>
+      {Formik.errors[type] && Formik.touched[type] && (
+        <div className={styles.errorMessage}>
+          <i className="fas fa-exclamation-triangle"></i>
+          <span>{Formik.errors[type]}</span>
+        </div>
+      )}
     </>
-  )
+  );
 }

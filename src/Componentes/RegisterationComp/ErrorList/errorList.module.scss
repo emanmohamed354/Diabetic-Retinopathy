@@ -1,0 +1,36 @@
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border-left: 3px solid rgba(244, 67, 54, 0.5);
+  border-radius: 6px;
+  animation: slideIn 0.3s ease;
+
+  i {
+    color: #f44336;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    flex: 1;
+    line-height: 1.3;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

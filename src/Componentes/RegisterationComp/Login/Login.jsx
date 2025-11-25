@@ -1,142 +1,156 @@
-
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import { BaseUrl } from '../../BaseUrl/base';
+import { mediaContext } from '../../../Context/MediaStore';
 import ErrorList from '../ErrorList/ErrorList';
-import styles from '../SignUp/signUp.module.scss';
-export default function Login() {
+import FormWrapper from '../FormWrapper/FormWrapper';
 
+export default function Login() {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { saveUserData } = useContext(mediaContext);
+
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
-
-  const [loading, setLoading] = useState(false)
-  let navigate = useNavigate()
 
   const notify = (msg, type) => {
     toast[type](msg, {
       autoClose: 1000,
     });
-  }
+  };
 
-  let validationSchema = Yup.object({
-    email: Yup.string().required().email(),
+  const validationSchema = Yup.object({
+    email: Yup.string().required('Email is required').email('Invalid email'),
     password: Yup.string()
-      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, `Password must start with an uppercase
-     letter and be at least 6 characters long,
-      including lowercase letters, digits, or @, $, %, &, #.`)
+      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, 'Invalid password format')
       .required('Password is required')
-  })
+  });
 
-  let Formik = useFormik({
+  const Formik = useFormik({
     initialValues: {
-
       email: '',
       password: ''
-
     },
-    validationSchema
-    ,
-
+    validationSchema,
     onSubmit: (values) => {
       setLoading(true);
-
       axios.post(`${BaseUrl}/users/signIn`, values)
         .then((response) => {
-          if (response.status === 201) {
-            notify('Registration successful! 💊', 'success');
-            localStorage.setItem('token', response.data.token)
+          if (response.status === 200 || response.status === 201) {
+            setLoading(false);
+            notify('Login successful! 🎉', 'success');
+            localStorage.setItem('token', response.data.token);
+            saveUserData();
             navigate('/');
           }
-          console.log(response);
-        }).catch((error) => {
-          if (error.response || error.response.status === 400) {
-            setLoading(false);
-            const errorMessage = error.response.data.msg || "An error occurred";
-            notify(errorMessage, 'error');
-          }
+        })
+        .catch((error) => {
+          setLoading(false);
+          const errorMessage = error.response?.data?.msg || 'Invalid credentials';
+          notify(errorMessage, 'error');
         });
     }
-
-
-  })
-
+  });
 
   return (
-
-
-    <main>
-
-      <div className={`${styles.bg}`}> </div>
-
-      <div className={`${styles.container}`}>
-
-        <form className={styles.form} onSubmit={Formik.handleSubmit}>
-          <h1 className={styles.text}>Login</h1>
-          <div className="row mb-3">
-            <div className="col-12 col-md-12">
-              <input type="email" className="form-control"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.email}
-                placeholder="Email" name="email" />
-              <ErrorList Formik={Formik} type={"email"} />
-            </div>
-
+    <FormWrapper
+      icon="fas fa-sign-in-alt"
+      title="Welcome Back"
+      onSubmit={Formik.handleSubmit}
+    >
+      <div className="formBody">
+        <div className="inputGroup">
+          <label>Email</label>
+          <div className="inputWrapper">
+            <i className="fas fa-envelope"></i>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              onBlur={Formik.handleBlur}
+              onChange={Formik.handleChange}
+              value={Formik.values.email}
+              className={`form-control ${Formik.errors.email && Formik.touched.email ? 'error' : ''}`}
+            />
           </div>
+          <ErrorList Formik={Formik} type="email" />
+        </div>
 
-
-
-          <div className="row mb-3">
-            <div className="col-12 col-md-12">
-              <input
-                type={passwordVisible ? 'text' : 'password'}
-                className="form-control"
-                placeholder="Password"
-                name="password"
-                onBlur={Formik.handleBlur}
-                onChange={Formik.handleChange}
-                value={Formik.values.password}
-
-              />
-              <ErrorList Formik={Formik} type={"password"} />
-              <span onClick={togglePasswordVisibility} style={{ cursor: 'pointer', position: 'absolute', right: '10px', top: '10px' }}>
-                <FontAwesomeIcon icon={passwordVisible ? faEye : faEyeSlash} />
-              </span>
-            </div>
-
+        <div className="inputGroup">
+          <label>Password</label>
+          <div className="inputWrapper">
+            <i className="fas fa-lock"></i>
+            <input
+              type={passwordVisible ? 'text' : 'password'}
+              name="password"
+              placeholder="Enter your password"
+              onBlur={Formik.handleBlur}
+              onChange={Formik.handleChange}
+              value={Formik.values.password}
+              className={`form-control ${Formik.errors.password && Formik.touched.password ? 'error' : ''}`}
+            />
+            <button
+              type="button"
+              className="eyeButton"
+              onClick={togglePasswordVisibility}
+            >
+              <FontAwesomeIcon icon={passwordVisible ? faEye : faEyeSlash} />
+            </button>
           </div>
+          <ErrorList Formik={Formik} type="password" />
+        </div>
 
-
-
-
-          <button disabled={!(Formik.isValid && Formik.dirty && !loading)} type='submit' className={styles['gradient-button']}>
-
-            {!loading ? ("Login") :
-              <i className='fa-spinner fa-spin fas mt-2'></i>
-
-            }
-
-          </button>
-          <div className='text-center mt-2'>
-            <span >Do not have an account ? <Link to={'/SignUp'} className={`linkk ${styles.text}`}>Sign Up</Link></span>
-          </div>
-          <div className='text-center mt-2'>
-            <span >Forget Password ? <Link to={'/ForgetPassword'} className={`linkk ${styles.text}`}>Forget Password</Link></span>
-          </div>
-
-
-        </form>
+        <div className="options">
+          <label className="checkbox">
+            <input type="checkbox" />
+            <span>Remember me</span>
+          </label>
+          <Link to="/auth/forget-password" className="link">
+            Forgot Password?
+          </Link>
+        </div>
       </div>
-    </main>
 
-  )
+      <div className="formFooter">
+        <button
+          type="submit"
+          className="submitBtn"
+          disabled={!(Formik.isValid && Formik.dirty) || loading}
+        >
+          {loading ? (
+            <i className="fas fa-spinner fa-spin"></i>
+          ) : (
+            <>
+              <i className="fas fa-sign-in-alt"></i>
+              <span>Sign In</span>
+            </>
+          )}
+        </button>
+
+        <div className="divider">
+          <span>OR</span>
+        </div>
+
+        <button type="button" className="socialBtn">
+          <i className="fab fa-google"></i>
+          <span>Continue with Google</span>
+        </button>
+
+        <p className="switchText">
+          Don't have an account?
+          <Link to="/auth/signup" className="link">
+            Create Account
+          </Link>
+        </p>
+      </div>
+    </FormWrapper>
+  );
 }
-

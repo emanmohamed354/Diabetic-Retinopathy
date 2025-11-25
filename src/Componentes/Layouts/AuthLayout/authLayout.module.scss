@@ -1,0 +1,213 @@
+@import '../../../styles/shared/variables';
+
+.authContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background: $bg-gradient;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  // Medical grid pattern
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  .backgroundLayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    .overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: url('../../../images/medical.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.08;
+      filter: blur(2px);
+    }
+  }
+  
+  .contentWrapper {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    max-width: 1400px;
+    height: 85vh;
+    max-height: 800px;
+    display: flex;
+    gap: 3rem;
+    
+    .leftSection {
+      flex: 0.8;
+      display: flex;
+      align-items: center;
+      
+      .brandInfo {
+        color: $white;
+        
+        .logo {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 2rem;
+          
+          i {
+            font-size: 2.5rem;
+            color: $white;
+            filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.3));
+          }
+          
+          span {
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 10px rgba($black, 0.2);
+          }
+        }
+        
+        h1 {
+          font-size: 2.5rem;
+          margin-bottom: 1rem;
+          font-weight: 700;
+          text-shadow: 2px 2px 10px rgba($black, 0.2);
+          line-height: 1.2;
+        }
+        
+        p {
+          font-size: 1.125rem;
+          margin-bottom: 3rem;
+          opacity: 0.9;
+          line-height: 1.6;
+        }
+        
+        .features {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          
+          .featureItem {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: $radius-lg;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: $transition;
+            
+            &:hover {
+              background: rgba(255, 255, 255, 0.15);
+              transform: translateX(8px);
+            }
+            
+            i {
+              font-size: 1.5rem;
+              color: $white;
+              width: 40px;
+            }
+            
+            div {
+              h3 {
+                font-size: 1rem;
+                margin-bottom: 0.25rem;
+                font-weight: 600;
+              }
+              
+              p {
+                font-size: 0.875rem;
+                margin: 0;
+                opacity: 0.85;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    .rightSection {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .formCard {
+        width: 100%;
+        max-width: 500px;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: $radius-xl;
+        box-shadow: $shadow-2xl;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+  
+  // RESPONSIVE - HIDE LEFT ON MOBILE
+  @media (max-width: $breakpoint-lg) {
+    .contentWrapper {
+      padding: 2rem;
+      justify-content: center;
+      
+      .leftSection {
+        display: none !important;
+      }
+      
+      .rightSection {
+        flex: unset;
+        width: 100%;
+        max-width: 500px;
+      }
+    }
+  }
+  
+  @media (max-width: $breakpoint-sm) {
+    .contentWrapper {
+      padding: 1rem;
+      
+      .rightSection {
+        .formCard {
+          border-radius: $radius-lg;
+        }
+      }
+    }
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}

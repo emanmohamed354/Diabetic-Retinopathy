@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+$primary: #00acc1;           
+$primary-dark: #00838f;
+$primary-light: #26c6da;
+$primary-gradient: linear-gradient(135deg, #00acc1 0%, #0097a7 100%);
+
+$secondary: #00897b;         
+$secondary-light: #26a69a;
+$secondary-gradient: linear-gradient(135deg, #00897b 0%, #00acc1 100%);
+
+// Status Colors
+$success: #4caf50;
+$success-light: #81c784;
+$warning: #ff9800;
+$warning-light: #ffb74d;
+$error: #f44336;
+$error-light: #e57373;
+$info: #2196f3;
+$info-light: #64b5f6;
+
+// Neutrals
+$white: #ffffff;
+$black: #000000;
+$gray-50: #fafafa;
+$gray-100: #f5f5f5;
+$gray-200: #eeeeee;
+$gray-300: #e0e0e0;
+$gray-400: #bdbdbd;
+$gray-500: #9e9e9e;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+$gray-900: #212121;
+
+// Backgrounds
+$bg-primary: #f0f9ff;
+$bg-secondary: #ffffff;
+$bg-gradient: linear-gradient(135deg, #006064 0%, #00838f 50%, #00acc1 100%);
+
+// Shadows
+$shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+$shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+$shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+// Border Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-2xl: 24px;
+$radius-full: 9999px;
+
+// Breakpoints
+$breakpoint-xs: 360px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Transitions
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.15s ease;

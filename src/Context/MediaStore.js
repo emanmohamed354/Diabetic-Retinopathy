@@ -1,20 +1,26 @@
 import { jwtDecode } from "jwt-decode"; 
 import { createContext, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
 
 export let mediaContext = createContext(null);
 
 export default function MediaContextProvider(props) {
-    const [userData, setUserData] = useState(''); 
-    const [Role,setRole]= useState('');
+    const [userData, setUserData] = useState(null); 
+    const [Role, setRole] = useState('');
+    
     let saveUserData = () => {
         let encodedToken = localStorage.getItem("token");
         if (encodedToken) {
-           
-            let decodedToken = jwtDecode(encodedToken);
-            setUserData(decodedToken); 
-            setRole(decodedToken.role);
-            console.log(decodedToken); 
+            try {
+                let decodedToken = jwtDecode(encodedToken);
+                console.log('Decoded Token:', decodedToken);
+                setUserData(decodedToken); 
+                setRole(decodedToken.role || 'user');
+            } catch (error) {
+                console.error('Token decode error:', error);
+                localStorage.removeItem("token");
+                setUserData(null);
+                setRole('');
+            }
         }
     };
 
@@ -26,14 +32,12 @@ export default function MediaContextProvider(props) {
 
     let LogOut = () => {
         localStorage.removeItem("token");
-        setUserData('');
-
-        return <Navigate to="/Login" />; 
+        setUserData(null);
+        setRole('');
     };
 
-    // Provide context values
     return (
-        <mediaContext.Provider value={{ saveUserData, userData,Role, LogOut }}>
+        <mediaContext.Provider value={{ saveUserData, userData, Role, LogOut }}>
             {props.children}
         </mediaContext.Provider>
     );

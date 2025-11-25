@@ -1,87 +1,63 @@
 import React, { useContext } from 'react';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import FetchCartProvider from '../../Context/Cart';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { mediaContext } from '../../Context/MediaStore';
-import AddProduct from '../LayOutComp/AdminPage/addProduct/Addproduct';
-import ProductManager from '../LayOutComp/AdminPage/productManager/ProductManager';
-import Alternative from '../LayOutComp/Alternative/AlternativesPage';
-import MedicalTests from '../LayOutComp/MedicalTests/MedicalTests';
-import MedicalTourism from '../LayOutComp/medicaltourism/medicaltourism';
-import Orders from '../LayOutComp/Orders/Order';
-import Products from '../LayOutComp/Products/Products';
-import Profile from '../LayOutComp/profile/profile';
-import WishList from '../LayOutComp/WishList/WishList';
-import ForgetPassword from '../RegisterationComp/ForgetPassword/ForgetPassword';
-import ProtectRouter from '../RegisterationComp/ProtectRouter/ProtectRouter';
-import ResetPassword from '../RegisterationComp/ResetPassword/ResetPassword';
-import ReverseProtectRouter from '../RegisterationComp/ReverseProtectRouter/ReverseProtect';
+import AuthLayout from '../Layouts/AuthLayout/AuthLayout';
+import Login from '../RegisterationComp/Login/Login';
 import SignUp from '../RegisterationComp/SignUp/SignUp';
-import CartPage from './../LayOutComp/CartPage/CartPage';
-import Home from './../LayOutComp/HomePage/Home';
-import MasterLayOut from './../LayOutComp/MaterLayOut/MasterLayOut';
-import NotFound from './../LayOutComp/NotFound/NotFound';
-import Login from './../RegisterationComp/Login/Login';
+import ForgetPassword from '../RegisterationComp/ForgetPassword/ForgetPassword';
+import ResetPassword from '../RegisterationComp/ResetPassword/ResetPassword';
+import DiabeticsAnalysis from '../DiabeticsAnalysis/DiabeticsAnalysis';
 
-export default function App() {
-  const { Role } = useContext(mediaContext);
+function ProtectedRoute({ children }) {
+  const { userData } = useContext(mediaContext);
+  
+  if (!localStorage.getItem('token')) {
+    return <Navigate to="/auth/login" replace />;
+  }
+  
+  return children;
+}
 
-  let routesConfig = [
+function PublicRoute({ children }) {
+  if (localStorage.getItem('token')) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+}
+
+function App() {
+  const router = createBrowserRouter([
     {
       path: '/',
-      element: <MasterLayOut />,
-      errorElement: <NotFound />,
+      element: (
+        <ProtectedRoute>
+          <DiabeticsAnalysis />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: '/auth',
+      element: (
+        <PublicRoute>
+          <AuthLayout />
+        </PublicRoute>
+      ),
       children: [
-        { path: 'Products', element: <ProtectRouter><Products /></ProtectRouter> },
-        { path: 'MedicalTests', element: <ProtectRouter><MedicalTests /></ProtectRouter> },
-        { path: 'Cart', element: <ProtectRouter><CartPage /></ProtectRouter> },
-        { path: 'WishList', element: <ProtectRouter><WishList /></ProtectRouter> },
-        { path: 'MedicalTourism', element: <ProtectRouter><MedicalTourism /></ProtectRouter> },
-        { path: 'Alternative', element: <ProtectRouter><Alternative /></ProtectRouter> },
-        { path: 'Profile', element: <ProtectRouter><Profile /></ProtectRouter> },
-        { path: 'Orders', element: <ProtectRouter><Orders /></ProtectRouter> },
-        { path: "Login", element: <ReverseProtectRouter><Login /></ReverseProtectRouter> },
-        { path: 'SignUp', element: <SignUp /> },
-        { path: 'ForgetPassword', element: <ForgetPassword /> },
-        { path: 'ResetPassword', element: <ResetPassword /> },
+        { index: true, element: <Navigate to="/auth/login" replace /> },
+        { path: 'login', element: <Login /> },
+        { path: 'signup', element: <SignUp /> },
+        { path: 'forget-password', element: <ForgetPassword /> },
+        { path: 'reset-password', element: <ResetPassword /> }
       ]
+    },
+    {
+      path: '*',
+      element: <Navigate to="/" replace />
     }
-  ];
+  ]);
 
-  if (Role === 'admin') {
-    routesConfig[0].children.push(
-      {
-        path: '',
-        element: (
-          <ProtectRouter>
-            <AddProduct />
-          </ProtectRouter>
-        ),
-      },
-      {
-        path: 'ProductManager',
-        element: (
-          <ProtectRouter>
-            <ProductManager />
-          </ProtectRouter>
-        ),
-      }
-    );
-  } else {
-    routesConfig[0].children.push({
-      index: true,
-      element: <ProtectRouter><Home /></ProtectRouter>
-    });
-  }
-
-  const routes = createBrowserRouter(routesConfig);
-
-  return (
-    <>
-      <FetchCartProvider>
-        <ToastContainer theme='colored' />
-        <RouterProvider router={routes} />
-      </FetchCartProvider>
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
+
+export default App;

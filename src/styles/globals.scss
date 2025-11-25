@@ -1,0 +1,25 @@
+:global {
+  :root {
+    --primary-color: #5a7c7e;
+    --primary-dark: #4a6365;
+    --primary-light: #7a9a9c;
+    --accent-color: #64b5b7;
+    --accent-light: #8ac4c6;
+    
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg-hover: rgba(255, 255, 255, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-border-active: rgba(255, 255, 255, 0.25);
+    
+    --text-primary: #2c3e50;
+    --text-secondary: #546e7a;
+    --text-muted: #78909c;
+    --text-light: rgba(255, 255, 255, 0.95);
+    --text-light-secondary: rgba(255, 255, 255, 0.75);
+    
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --error-color: #f44336;
+    --info-color: #2196f3;
+  }
+}

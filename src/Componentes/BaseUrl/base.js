@@ -1,1 +1,2 @@
-export const BaseUrl="https://pharmacy-backend845-ezf4.vercel.app"
+export const BaseUrl = "https://backend-diabetic.vercel.app";
+export const PredictUrl = "http://54.37.106.163:8000";
