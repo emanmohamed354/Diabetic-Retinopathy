@@ -15,9 +15,15 @@ export default function MediaContextProvider(props) {
                 console.log('Decoded Token:', decodedToken);
                 setUserData(decodedToken); 
                 setRole(decodedToken.role || 'user');
+                
+                // ✅ SAVE USER ID TO LOCALSTORAGE
+                if (decodedToken.userId) {
+                    localStorage.setItem('userId', decodedToken.userId);
+                }
             } catch (error) {
                 console.error('Token decode error:', error);
                 localStorage.removeItem("token");
+                localStorage.removeItem("userId");
                 setUserData(null);
                 setRole('');
             }
@@ -32,6 +38,7 @@ export default function MediaContextProvider(props) {
 
     let LogOut = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("userId");
         setUserData(null);
         setRole('');
     };
