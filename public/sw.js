@@ -31,22 +31,24 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
 ];
 
-// ✅ HELPER FUNCTION - Check if URL is cacheable
 function isCacheableUrl(url) {
   try {
-    const urlObj = new URL(url);
-    // 🔴 Filter out invalid schemes
+    // Convert relative → absolute
+    const urlObj = new URL(url, self.location.origin);
+
     const validSchemes = ['http:', 'https:'];
     if (!validSchemes.includes(urlObj.protocol)) {
       console.warn(`⚠️ Skipping uncacheable URL scheme: ${urlObj.protocol} - ${url}`);
       return false;
     }
+
     return true;
   } catch (error) {
     console.warn(`⚠️ Invalid URL: ${url}`, error);
     return false;
   }
 }
+
 
 // Install Event - Cache assets
 self.addEventListener('install', (event) => {
