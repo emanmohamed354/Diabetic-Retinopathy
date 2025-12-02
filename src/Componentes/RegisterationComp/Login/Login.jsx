@@ -30,7 +30,6 @@ export default function Login() {
   const validationSchema = Yup.object({
     email: Yup.string().required('Email is required').email('Invalid email'),
     password: Yup.string()
-      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, 'Invalid password format')
       .required('Password is required')
   });
 
@@ -123,7 +122,7 @@ export default function Login() {
         <button
           type="submit"
           className="submitBtn"
-          disabled={!(Formik.isValid && Formik.dirty) || loading}
+          disabled={loading || !Formik.values.email || !Formik.values.password || Formik.errors.email || Formik.errors.password}
         >
           {loading ? (
             <i className="fas fa-spinner fa-spin"></i>

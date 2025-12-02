@@ -2,7 +2,7 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import * as Yup from 'yup';
@@ -41,6 +41,15 @@ export default function SignUp() {
 
   useEffect(() => {
     setIsManualSubmit(false);
+    // Validate all fields when reaching step 3
+    if (currentStep === 3) {
+      // Trigger validation for all fields
+      const validateAll = async () => {
+        await Formik.validateForm();
+      };
+      validateAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep]);
 
   const validationSchema = Yup.object({
@@ -49,7 +58,7 @@ export default function SignUp() {
     phone: Yup.string().matches(/^\d{11}$/, 'Must be 11 digits').required('Phone is required'),
     email: Yup.string().required('Email is required').email('Invalid email'),
     password: Yup.string()
-      .matches(/^[A-Z][a-z0-9@$%&#]{5,}$/, 'Invalid format')
+      .min(6, 'Password must be at least 6 characters')
       .required('Password is required'),
     confirmPassword: Yup.string().required('Confirm password is required')
       .oneOf([Yup.ref('password')], 'Passwords must match'),
@@ -83,6 +92,9 @@ export default function SignUp() {
       country: ''
     },
     validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    validateOnMount: false,
     onSubmit: (values) => {
       if (!isManualSubmit) {
         console.warn('Prevented auto-submit');
@@ -155,8 +167,31 @@ export default function SignUp() {
     }
   };
 
-  const nextStep = () => {
-    setCurrentStep(currentStep + 1);
+  const nextStep = async () => {
+    // Validate current step fields before moving forward
+    let fieldsToValidate = [];
+    if (currentStep === 1) {
+      fieldsToValidate = ['userName', 'lastName', 'phone', 'email', 'age', 'gender'];
+    } else if (currentStep === 2) {
+      fieldsToValidate = ['password', 'confirmPassword'];
+    }
+    
+    // Validate only current step fields
+    const errors = await Formik.validateForm();
+    const hasErrors = fieldsToValidate.some(field => errors[field]);
+    
+    if (!hasErrors) {
+      setCurrentStep(currentStep + 1);
+      // Validate all fields when reaching step 3
+      if (currentStep === 2) {
+        Formik.validateForm();
+      }
+    } else {
+      // Mark fields as touched to show errors
+      fieldsToValidate.forEach(field => {
+        Formik.setFieldTouched(field, true);
+      });
+    }
   };
 
   const prevStep = () => {
@@ -464,7 +499,25 @@ export default function SignUp() {
                   type="button"
                   className="submitBtn"
                   onClick={handleManualSubmit}
-                  disabled={!(Formik.isValid && Formik.dirty) || loading}
+                  disabled={
+                    loading || 
+                    !Formik.values.street || 
+                    !Formik.values.city || 
+                    !Formik.values.state || 
+                    !Formik.values.country ||
+                    Formik.errors.street ||
+                    Formik.errors.city ||
+                    Formik.errors.state ||
+                    Formik.errors.country ||
+                    Formik.errors.userName ||
+                    Formik.errors.lastName ||
+                    Formik.errors.phone ||
+                    Formik.errors.email ||
+                    Formik.errors.password ||
+                    Formik.errors.confirmPassword ||
+                    Formik.errors.age ||
+                    Formik.errors.gender
+                  }
                 >
                   {loading ? (
                     <i className="fas fa-spinner fa-spin"></i>
