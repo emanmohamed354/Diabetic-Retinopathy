@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { mediaContext } from '../../../Context/MediaStore';
 import PatientForm from './PatientForm/PatientForm';
+import AnalysisHistoryModal from './AnalysisHistoryModal/AnalysisHistoryModal';
 import PatientDetailsModal from './PatientDetailsModal/PatientDetailsModal';
 import DeleteConfirmModal from './DeleteConfirmModal/DeleteConfirmModal';
 import { patientAPI } from '../../../services/patientAPI';
@@ -22,6 +23,8 @@ export default function PatientsList() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   const { userData } = useContext(mediaContext);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyPatient, setHistoryPatient] = useState(null);
 
   useEffect(() => {
     fetchPatients();
@@ -42,6 +45,16 @@ export default function PatientsList() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewHistory = (patient) => {
+    if (!patient || !patient._id) {
+      toast.error('Invalid patient data');
+      return;
+    }
+    
+    setHistoryPatient(patient);
+    setShowHistory(true);
   };
 
   const filterPatients = () => {
@@ -81,13 +94,11 @@ export default function PatientsList() {
     setShowDetails(true);
   };
 
-  // ✅ Open delete confirmation modal
   const handleDeleteClick = (patient) => {
     setPatientToDelete(patient);
     setShowDeleteModal(true);
   };
 
-  // ✅ Confirm delete
   const handleConfirmDelete = async () => {
     setDeleteLoading(true);
     try {
@@ -303,9 +314,13 @@ export default function PatientsList() {
                 )}
 
                 <div className={styles.cardFooterBtn}>
-                  <button className={styles.viewHistoryBtn}>
+                  <button 
+                    className={styles.viewHistoryBtn}
+                    onClick={() => handleViewHistory(patient)}
+                    type="button"
+                  >
                     <i className="fas fa-history"></i>
-                    View History ({patient.totalAnalyses})
+                    View History ({patient.totalAnalyses || 0})
                   </button>
                 </div>
               </div>
@@ -322,6 +337,16 @@ export default function PatientsList() {
         />
       )}
 
+      {showHistory && historyPatient && (
+        <AnalysisHistoryModal
+          patient={historyPatient}
+          onClose={() => {
+            setShowHistory(false);
+            setHistoryPatient(null);
+          }}
+        />
+      )}
+
       {showDetails && selectedPatient && (
         <PatientDetailsModal
           patient={selectedPatient}
@@ -333,7 +358,6 @@ export default function PatientsList() {
         />
       )}
 
-      {/* ✅ DELETE CONFIRMATION MODAL */}
       {showDeleteModal && (
         <DeleteConfirmModal
           patient={patientToDelete}

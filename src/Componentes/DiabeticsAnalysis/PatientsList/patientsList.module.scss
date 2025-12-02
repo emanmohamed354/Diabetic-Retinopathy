@@ -482,9 +482,13 @@
   }
 }
 
+// Fix z-index for modals to be ABOVE the button
 .cardFooterBtn {
   padding: 1rem 1.25rem;
   border-top: 2px solid $gray-100;
+  position: relative;
+  z-index: 1; // ✅ CHANGED from 100 to 1
+  background: $white;
   
   .viewHistoryBtn {
     width: 100%;
@@ -501,10 +505,37 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    position: relative;
+    z-index: 1; // ✅ CHANGED from 100 to 1
+    pointer-events: auto;
     
     &:hover {
       background: rgba($primary, 0.08);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba($primary, 0.2);
     }
+    
+    &:active {
+      background: rgba($primary, 0.15);
+      transform: translateY(0);
+    }
+    
+    i {
+      pointer-events: none;
+    }
+  }
+}
+
+// Ensure modals are ABOVE everything else
+:global {
+  .modal-overlay,
+  [class*="modalOverlay"] {
+    z-index: 9999 !important; // ✅ Modal overlays
+  }
+  
+  .modal,
+  [class*="modal"]:not([class*="modalOverlay"]) {
+    z-index: 10000 !important; // ✅ Modal content
   }
 }
 .cardActions {
