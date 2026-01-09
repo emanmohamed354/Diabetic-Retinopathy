@@ -1,0 +1,72 @@
+@import '../../../styles/shared/variables';
+
+.stepButtons {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  
+  @media (max-width: $breakpoint-sm) {
+    flex-direction: column-reverse;
+  }
+}
+
+.nextBtn {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  background: $primary-gradient;
+  color: $white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: $transition;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba($primary, 0.3);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba($primary, 0.4);
+  }
+  
+  i {
+    transition: transform 0.2s ease;
+  }
+  
+  &:hover i {
+    transform: translateX(4px);
+  }
+}
+
+.prevBtn {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  background: $white;
+  color: $gray-700;
+  border: 2px solid $gray-300;
+  border-radius: $radius-md;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: $transition;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    background: $gray-100;
+    border-color: $gray-400;
+  }
+  
+  i {
+    transition: transform 0.2s ease;
+  }
+  
+  &:hover i {
+    transform: translateX(-4px);
+  }
+}

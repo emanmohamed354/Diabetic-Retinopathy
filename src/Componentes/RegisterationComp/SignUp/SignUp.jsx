@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import { BaseUrl } from '../../BaseUrl/base';
 import ErrorList from '../ErrorList/ErrorList';
 import FormWrapper from '../FormWrapper/FormWrapper';
+import styles from './signUp.module.scss';
 
 export default function SignUp() {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -211,7 +212,7 @@ export default function SignUp() {
           <>
             <div className="formBody">
               <div className="row g-2">
-                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>First Name</label>
                     <div className="inputWrapper">
@@ -230,7 +231,7 @@ export default function SignUp() {
                     </div>
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>Last Name</label>
                     <div className="inputWrapper">
@@ -288,7 +289,7 @@ export default function SignUp() {
               </div>
 
               <div className="row g-2">
-                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>Age</label>
                     <div className="inputWrapper">
@@ -308,7 +309,7 @@ export default function SignUp() {
                     </div>
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>Gender</label>
                     <div className="inputWrapper">
@@ -333,8 +334,8 @@ export default function SignUp() {
             </div>
 
             <div className="formFooter">
-              <div className="stepButtons">
-                <button type="button" className="nextBtn" onClick={nextStep}>
+              <div className={styles.stepButtons}>
+                <button type="button" className={styles.nextBtn} onClick={nextStep}>
                   <span>Next</span>
                   <i className="fas fa-arrow-right"></i>
                 </button>
@@ -393,12 +394,12 @@ export default function SignUp() {
             </div>
 
             <div className="formFooter">
-              <div className="stepButtons">
-                <button type="button" className="prevBtn" onClick={prevStep}>
+              <div className={styles.stepButtons}>
+                <button type="button" className={styles.prevBtn} onClick={prevStep}>
                   <i className="fas fa-arrow-left"></i>
                   <span>Back</span>
                 </button>
-                <button type="button" className="nextBtn" onClick={nextStep}>
+                <button type="button" className={styles.nextBtn}  onClick={nextStep}>
                   <span>Next</span>
                   <i className="fas fa-arrow-right"></i>
                 </button>
@@ -430,7 +431,7 @@ export default function SignUp() {
               </div>
 
               <div className="row g-2">
-                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>City</label>
                     <div className="inputWrapper">
@@ -449,7 +450,7 @@ export default function SignUp() {
                     </div>
                   </div>
                 </div>
-                                <div className="col-6">
+                <div className="col-12">
                   <div className="inputGroup">
                     <label>State</label>
                     <div className="inputWrapper">
@@ -490,8 +491,8 @@ export default function SignUp() {
             </div>
 
             <div className="formFooter">
-              <div className="stepButtons">
-                <button type="button" className="prevBtn" onClick={prevStep}>
+              <div className={styles.stepButtons}>
+                <button type="button" className={styles.prevBtn} onClick={prevStep}>
                   <i className="fas fa-arrow-left"></i>
                   <span>Back</span>
                 </button>
